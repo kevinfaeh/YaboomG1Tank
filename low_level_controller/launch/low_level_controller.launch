@@ -1,6 +1,6 @@
 <launch>
 
-<node pkg="low_level_controller" name="low_level_controller" type="low_level_controller.py" output="screen" >
+<node pkg="low_level_controller" name="low_level_controller" type="low_level_ctrl.py" output="screen" >
 </node>
 
 </launch>

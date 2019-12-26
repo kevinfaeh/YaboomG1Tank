@@ -7,8 +7,8 @@ This file holds the low level controller for the tank.
 import rospy
 import time
 
-from low_level_controller.src.servo_motor import ServoMotor
-from low_level_controller.src.dc_motor import DC_Motor
+from servo_motor import ServoMotor
+from dc_motor import DC_Motor
 from low_level_controller.msg import DC_Motor_msg
 from low_level_controller.msg import DC_MotorArray
 from low_level_controller.msg import ServoMotor_msg
@@ -42,12 +42,14 @@ class LowLevelController:
         rospy.init_node(self.node_name)
 
         self.servo_array_msg = ServoMotorArray()
+        self.servo_array_msg.servos = []
         for i in range(3):
-            self.servo_array_msg.append(ServoMotor_msg())
+            self.servo_array_msg.servos.append(ServoMotor_msg())
 
         self.dc_motor_array_msg = DC_MotorArray()
+        self.dc_motor_array_msg.motors = []
         for i in range(2):
-            self.dc_motor_array_msg.append(DC_Motor_msg())
+            self.dc_motor_array_msg.motors.append(DC_Motor_msg())
 
         self.ros_pub_servo_array = rospy.Publisher("/" + self.node_name + "/servo_array", ServoMotorArray, queue_size=1)
         self.ros_pub_dc_motor_array = rospy.Publisher("/" + self.node_name + "/dc_motor_array", DC_MotorArray, queue_size=1)
@@ -68,17 +70,19 @@ class LowLevelController:
         :param message: the message of servo arrays
         :type message ServoMotorArray
         """
-        for i, servo_motor_message in enumerate(message):
-            self.servos[i].set_angle(servo_motor_message.angle)
+        rospy.loginfo(str(message.servos))
+        for servo_motor_message in message.servos:
+            self.servos[servo_motor_message.id-1].set_angle(servo_motor_message.angle)
         self.publish_servo_message()
 
     def publish_servo_message(self):
         """
         This function publishes the servo message
         """
+        rospy.loginfo("publishing!")
         for i, servo in enumerate(self.servos):
-            self.servo_array_msg[i].id = servo.id
-            self.servo_array_msg[i].angle = servo.angle
+            self.servo_array_msg.servos[i].id = servo.id
+            self.servo_array_msg.servos[i].angle = servo.angle
         self.ros_pub_servo_array.publish(self.servo_array_msg)
 
     def set_dc_motor_from_command(self, message):
@@ -87,8 +91,8 @@ class LowLevelController:
         :param message: the message of servo arrays
         :type message ServoMotorArray
         """
-        for i, dc_motor_message in enumerate(message):
-            self.dc_motors[i].run_motor(dc_motor_message.velocity, dc_motor_message.direction)
+        for dc_motor_message in message.motors:
+            self.dc_motors[dc_motor_message.id-1].run_motor(dc_motor_message.velocity, dc_motor_message.direction)
         self.publish_dc_motor_message()
 
     def publish_dc_motor_message(self):
@@ -96,9 +100,9 @@ class LowLevelController:
         This function publishes the servo message
         """
         for i, dc_motor in enumerate(self.dc_motors):
-            self.dc_motor_array_msg[i].id = dc_motor.id
-            self.dc_motor_array_msg[i].velocity = dc_motor.velocity
-            self.dc_motor_array_msg[i].direction = dc_motor.direction
+            self.dc_motor_array_msg.motors[i].id = dc_motor.id
+            self.dc_motor_array_msg.motors[i].velocity = dc_motor.velocity
+            self.dc_motor_array_msg.motors[i].direction = dc_motor.direction
 
         self.ros_pub_dc_motor_array.publish(self.dc_motor_array_msg)
 
@@ -117,4 +121,5 @@ if __name__ == '__main__':
     try:
         low_level_controller.run()
     except rospy.ROSInterruptException:
+        GPIO.cleanup()
         pass

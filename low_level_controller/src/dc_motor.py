@@ -67,13 +67,13 @@ class DC_Motor:
             if direction == -1:
                 GPIO.output(self.IN1, GPIO.LOW)
                 GPIO.output(self.IN2, GPIO.HIGH)
-                self.pwm_ENX.ChangeDutyCylce(velocity)
+                self.pwm_ENX.ChangeDutyCycle(velocity)
                 self.direction = direction
                 self.velocity = velocity
             else:
                 GPIO.output(self.IN1, GPIO.HIGH)
                 GPIO.output(self.IN2, GPIO.LOW)
-                self.pwm_ENX.ChangeDutyCylce(velocity)
+                self.pwm_ENX.ChangeDutyCycle(velocity)
                 self.direction = direction
                 self.velocity = velocity
 
@@ -83,7 +83,7 @@ class DC_Motor:
         """
         GPIO.output(self.IN1, GPIO.LOW)
         GPIO.output(self.IN2, GPIO.LOW)
-        self.pwm_ENX.ChangeDutyCylce(0)
+        self.pwm_ENX.ChangeDutyCycle(0)
         self.velocity = 0
         self.direction = 0
 

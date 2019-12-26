@@ -32,6 +32,8 @@ class ServoMotor:
         self.servo_pin = servo_pin
         self.pwm_frequency = pwm_frequency
 
+        GPIO.setup(self.servo_pin, GPIO.OUT)
+
         self.pwm_servo = GPIO.PWM(servo_pin, pwm_frequency)
         self.pwm_servo.start(0)
         self.angle = init_angle
