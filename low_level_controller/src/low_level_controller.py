@@ -7,12 +7,12 @@ This file holds the low level controller for the tank.
 import rospy
 import time
 
-from LowLevelController.src.servo_motor import ServoMotor
-from LowLevelController.src.dc_motor import DC_Motor
-from LowLevelController.msg import DC_Motor_msg
-from LowLevelController.msg import DC_MotorArray
-from LowLevelController.msg import ServoMotor_msg
-from LowLevelController.msg import ServoMotorArray
+from low_level_controller.src.servo_motor import ServoMotor
+from low_level_controller.src.dc_motor import DC_Motor
+from low_level_controller.msg import DC_Motor_msg
+from low_level_controller.msg import DC_MotorArray
+from low_level_controller.msg import ServoMotor_msg
+from low_level_controller.msg import ServoMotorArray
 
 
 class LowLevelController:
