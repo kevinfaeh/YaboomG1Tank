@@ -45,6 +45,7 @@ class ServoMotor:
         :param angle: the angle to set the servo
         :type angle: float
         """
+        self.pwm_servo = GPIO.PWM(self.servo_pin, self.pwm_frequency)
         self.pwm_servo.ChangeDutyCycle(2.5 + 10 * angle / 180)
         self.angle = angle
 
