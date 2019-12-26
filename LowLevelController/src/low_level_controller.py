@@ -5,6 +5,7 @@
 This file holds the low level controller for the tank.
 """
 import rospy
+import time
 
 from LowLevelController.src.servo_motor import ServoMotor
 from LowLevelController.src.dc_motor import DC_Motor
@@ -52,9 +53,68 @@ class LowLevelController:
         self.ros_pub_dc_motor_array = rospy.Publisher("/" + self.node_name + "/dc_motor_array", DC_MotorArray, queue_size=1)
         rospy.loginfo("initalized publisher")
 
-        self.ros_sub_
+        self.ros_sub_servo_array = rospy.Subscriber("/cmd_servo_array", ServoMotorArray, self.set_servo_from_command)
+
+        self.ros_sub_dc_motor_array = rospy.Subscriber("/cmd_dc_motor_array", DC_MotorArray, self.set_dc_motor_from_command)
+        rospy.loginfo("initalized subscriber")
+
+        self.timeout = 5
+        self.last_command_received = time.time()
+        rospy.loginfo("node initialization finished")
+
+    def set_servo_from_command(self, message):
+        """
+        This function sets the servo motors from the subscribed command
+        :param message: the message of servo arrays
+        :type message ServoMotorArray
+        """
+        for i, servo_motor_message in enumerate(message):
+            self.servos[i].set_angle(servo_motor_message.angle)
+        self.publish_servo_message()
+
+    def publish_servo_message(self):
+        """
+        This function publishes the servo message
+        """
+        for i, servo in enumerate(self.servos):
+            self.servo_array_msg[i].id = servo.id
+            self.servo_array_msg[i].angle = servo.angle
+        self.ros_pub_servo_array.publish(self.servo_array_msg)
+
+    def set_dc_motor_from_command(self, message):
+        """
+        This function sets the servo motors from the subscribed command
+        :param message: the message of servo arrays
+        :type message ServoMotorArray
+        """
+        for i, dc_motor_message in enumerate(message):
+            self.dc_motors[i].run_motor(dc_motor_message.velocity, dc_motor_message.direction)
+        self.publish_dc_motor_message()
+
+    def publish_dc_motor_message(self):
+        """
+        This function publishes the servo message
+        """
+        for i, dc_motor in enumerate(self.dc_motors):
+            self.dc_motor_array_msg[i].id = dc_motor.id
+            self.dc_motor_array_msg[i].velocity = dc_motor.velocity
+            self.dc_motor_array_msg[i].direction = dc_motor.direction
+
+        self.ros_pub_dc_motor_array.publish(self.dc_motor_array_msg)
+
+    def run(self):
+        """
+        This function is to spin the node
+        """
+        rate = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            rate.sleep()
 
 
+if __name__ == '__main__':
 
-
-
+    low_level_controller = LowLevelController()
+    try:
+        low_level_controller.run()
+    except rospy.ROSInterruptException:
+        pass
