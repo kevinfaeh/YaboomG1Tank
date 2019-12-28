@@ -154,7 +154,4 @@ if __name__ == '__main__':
     try:
         low_level_controller.run()
     except rospy.ROSInterruptException:
-        rospy.loginfo("[LLC] shutting down motors..")
-        low_level_controller.shut_down_motors()
-        GPIO.cleanup()
-        rospy.loginfo("[LLC] all done!")
+        pass
