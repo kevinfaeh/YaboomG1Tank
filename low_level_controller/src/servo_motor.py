@@ -4,7 +4,8 @@
 This class is used to create as Servo motor object and control it.
 """
 
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
+import pigpio
 
 
 class ServoMotor:
@@ -25,17 +26,20 @@ class ServoMotor:
         self.id = id
 
         # Set the GPIO port to BCM encoding mode.
-        GPIO.setmode(GPIO.BCM)
+        #GPIO.setmode(GPIO.BCM)
         # Ignore warning information
-        GPIO.setwarnings(False)
+        #GPIO.setwarnings(False)
+
+        self.pi = pigpio.pi()
+        self.pi.set_mode(servo_pin, pigpio.OUTPUT)
 
         self.servo_pin = servo_pin
         self.pwm_frequency = pwm_frequency
 
-        GPIO.setup(self.servo_pin, GPIO.OUT)
+        #GPIO.setup(self.servo_pin, GPIO.OUT)
 
-        self.pwm_servo = GPIO.PWM(servo_pin, pwm_frequency)
-        self.pwm_servo.start(0)
+        #self.pwm_servo = GPIO.PWM(servo_pin, pwm_frequency)
+        #self.pwm_servo.start(0)
         self.angle = init_angle
         self.set_angle(init_angle)
 
@@ -45,15 +49,18 @@ class ServoMotor:
         :param angle: the angle to set the servo
         :type angle: float
         """
-        self.pwm_servo = GPIO.PWM(self.servo_pin, self.pwm_frequency)
-        self.pwm_servo.ChangeDutyCycle(2.5 + 10 * angle / 180)
+        #self.pwm_servo = GPIO.PWM(self.servo_pin, self.pwm_frequency)
+        #self.pwm_servo.ChangeDutyCycle(2.5 + 10 * angle / 180)
+        self.pi.set_servo_pulsewidth(self.servo_pin, 500 + 2000 * angle / 180)
         self.angle = angle
 
     def stop_motor(self):
         """
         This function stops the motor
         """
-        self.pwm_servo.stop()
+        #self.pwm_servo.stop()
+        self.pi.set_servo_pulsewidth(self.servo_pin, 0)
+        self.pi.stop()
 
     def get_angle(self):
         """
