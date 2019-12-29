@@ -1,6 +1,9 @@
 <launch>
 
-<node pkg="input_controller" name="input_controller" type="input_controller.py" output="screen" >
+<!-- <node pkg="input_controller" name="input_controller" type="input_ctrl.py" output="screen" >
+</node> -->
+
+<node pkg="input_controller" name="input_controller" type="xbox_controller.py" output="screen" >
 </node>
 
 </launch>

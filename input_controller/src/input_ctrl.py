@@ -58,25 +58,25 @@ class KeybardInput:
             l_vel = 0
             l_dir = 1
         elif x != 0 and y == 0:
-            r_vel = x*100
-            l_vel = x*100
+            r_vel = abs(x)*100
+            l_vel = abs(x)*100
             r_dir = 1 * math.copysign(1, x)
             l_dir = 1 * math.copysign(1, x)
         elif x == 0 and y != 0:
-            r_vel = y * 50
-            r_dir = math.copysign(1, y)
-            r_vel = y * 50
+            l_vel = abs(y) * 100
+            l_dir = math.copysign(1, y)
+            r_vel = abs(y) * 100
             r_dir = -1 *math.copysign(1, y)
 
         elif x != 0 and y != 0:
             if y < 0:
-                incr_r = 0.8
+                incr_r = 0.4
                 incr_l = 1
             else:
                 incr_r = 1
-                incr_l = 0.8
-            r_vel = x * 100 * incr_r
-            l_vel = x * 100 * incr_l
+                incr_l = 0.4
+            r_vel = abs(x) * 100 * incr_r
+            l_vel = abs(x) * 100 * incr_l
             r_dir = 1 * math.copysign(1, x)
             l_dir = 1 * math.copysign(1, x)
         velocity = [r_vel, l_vel]

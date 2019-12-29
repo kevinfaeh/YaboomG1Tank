@@ -51,6 +51,8 @@ class LowLevelController:
         self.ros_sub_dc_motor_array = rospy.Subscriber("/cmd_dc_motor_array", DC_MotorArray, self.set_dc_motor_from_command)
         rospy.loginfo("[LLC] initalized subscriber")
 
+        self.publish_servo_message()
+        self.publish_dc_motor_message()
         rospy.loginfo("[LLC] node initialization finished")
 
     def launch_motors(self, wait_time):
@@ -89,7 +91,6 @@ class LowLevelController:
         :param message: the message of servo arrays
         :type message ServoMotorArray
         """
-        rospy.loginfo(str(message.servos))
         for servo_motor_message in message.servos:
             self.servos[servo_motor_message.id-1].set_angle(servo_motor_message.angle)
         self.publish_servo_message()
@@ -98,7 +99,6 @@ class LowLevelController:
         """
         This function publishes the servo message
         """
-        rospy.loginfo("[LLC] publishing")
         for i, servo in enumerate(self.servos):
             self.servo_array_msg.servos[i].id = servo.id
             self.servo_array_msg.servos[i].angle = servo.angle
@@ -131,6 +131,8 @@ class LowLevelController:
         """
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
+            self.publish_servo_message()
+            self.publish_dc_motor_message()
             rate.sleep()
         # clean up while shutdown
         rospy.loginfo("[LLC] shutting down motors..")
