@@ -13,7 +13,7 @@ class ServoMotor:
     This class describes all functionality for a servo motor.
     """
 
-    def __init__(self, id,  servo_pin, pwm_frequency, init_angle):
+    def __init__(self, id,  servo_pin, pwm_frequency, init_angle, angle_min, angle_max):
         """
         This function initializes an Servo Motor object.
         :param id: The id of the motor.
@@ -25,21 +25,15 @@ class ServoMotor:
         """
         self.id = id
 
-        # Set the GPIO port to BCM encoding mode.
-        #GPIO.setmode(GPIO.BCM)
-        # Ignore warning information
-        #GPIO.setwarnings(False)
-
         self.pi = pigpio.pi()
         self.pi.set_mode(servo_pin, pigpio.OUTPUT)
 
         self.servo_pin = servo_pin
         self.pwm_frequency = pwm_frequency
 
-        #GPIO.setup(self.servo_pin, GPIO.OUT)
+        self.angle_min = angle_min
+        self.angle_max = angle_max
 
-        #self.pwm_servo = GPIO.PWM(servo_pin, pwm_frequency)
-        #self.pwm_servo.start(0)
         self.angle = init_angle
         self.set_angle(init_angle)
 
@@ -49,8 +43,11 @@ class ServoMotor:
         :param angle: the angle to set the servo
         :type angle: float
         """
-        #self.pwm_servo = GPIO.PWM(self.servo_pin, self.pwm_frequency)
-        #self.pwm_servo.ChangeDutyCycle(2.5 + 10 * angle / 180)
+        if angle >= self.angle_max:
+            angle = self.angle_max
+        elif angle <= self.angle_min:
+            angle = self.angle_min
+
         self.pi.set_servo_pulsewidth(self.servo_pin, 500 + 2000 * angle / 180)
         self.angle = angle
 
@@ -58,7 +55,6 @@ class ServoMotor:
         """
         This function stops the motor
         """
-        #self.pwm_servo.stop()
         self.pi.set_servo_pulsewidth(self.servo_pin, 0)
         self.pi.stop()
 

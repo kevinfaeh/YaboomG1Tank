@@ -62,13 +62,13 @@ class LowLevelController:
         :type wait_time: int
         """
 
-        servo_front = ServoMotor(1, 23, 50, 110)
+        servo_front = ServoMotor(1, 23, 50, 110, 5, 175)
         time.sleep(wait_time)
         rospy.loginfo("[LLC] launched servo front")
-        servo_cam_yaw = ServoMotor(2, 11, 50, 110)
+        servo_cam_yaw = ServoMotor(2, 11, 50, 110, 5, 175)
         time.sleep(wait_time)
         rospy.loginfo("[LLC] launched servo yaw")
-        servo_cam_pitch = ServoMotor(3, 9, 50, 110)
+        servo_cam_pitch = ServoMotor(3, 9, 50, 110, 70, 170)
         time.sleep(wait_time)
         rospy.loginfo("[LLC] launched servo pitch")
 
