@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(input_controller)
+project(camera)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
-  OpenCV
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions

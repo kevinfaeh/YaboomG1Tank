@@ -1,0 +1,7 @@
+<launch>
+
+<node pkg="camera" name="camera" type="face_controller.py" output="screen" >
+</node>
+
+
+</launch>
