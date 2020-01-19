@@ -233,7 +233,7 @@ class FaceController:
         """
         This function is used to run the node
         """
-        rate = rospy.Rate(50)
+        rate = rospy.Rate(30)
         while not rospy.is_shutdown():
             rate.sleep()
         # clean up while shutdown
