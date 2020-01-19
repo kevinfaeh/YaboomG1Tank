@@ -1,0 +1,9 @@
+<launch>
+
+	<rosparam command="load" file="$(find face_controller)/config/face_controller.yaml"/>
+
+	<node pkg="face_controller" name="face_controller" type="face_ctrl.py" output="screen" >
+	</node>
+
+
+</launch>

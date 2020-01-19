@@ -1,0 +1,9 @@
+<launch>
+
+	<rosparam command="load" file="$(find image_acquisition)/config/image_acquisition.yaml"/>
+
+	<node pkg="image_acquisition" name="image_acquisition" type="take_image.py" output="screen" >
+	</node>
+
+
+</launch>
