@@ -3,4 +3,6 @@
 <node pkg="low_level_controller" name="low_level_controller" type="low_level_ctrl.py" output="screen" >
 </node>
 
+<include file="$(find image_acquisition)/launch/image_acquisition.launch" />
+
 </launch>

@@ -5,6 +5,8 @@ This file is used to give commands to the servos, where a face is recognized.
 import cv2 as cv
 import rospy
 
+from dynamic_reconfigure.server import Server
+from face_controller.cfg import configure_pidConfig
 from sensor_msgs.msg import Image
 from input_controller.msg import ServoMotor_msg
 from input_controller.msg import ServoMotorArray
@@ -34,12 +36,12 @@ class FaceController:
 
     def __init__(self):
         """
-        This function initializes gamepad controller.
+        This function initializes the Face Controller controller.
         """
         self.node_name = "face_ctrl"
         rospy.init_node(self.node_name)
 
-        rospy.loginfo("[FACE] initializing controller")
+        rospy.loginfo("[FACE CTRL] initializing controller")
 
         self.ros_param_data = self.read_ros_parameters()
 
@@ -48,21 +50,16 @@ class FaceController:
         self.eyes_cascade_name = self.ros_param_data["eye_xml_path"]
         self.face_cascade = cv.CascadeClassifier()
         self.eyes_cascade = cv.CascadeClassifier()
-        self.camera_device = 2
-        self.cap = cv.VideoCapture(self.camera_device, cv.CAP_V4L)
-        if self.cap is None or not self.cap.isOpened():
-            rospy.logerr("[FACE] Could not connect to the camera!")
-        self.check_camera()
-        _, frame = self.cap.read()
-        self.image_height, self.image_width = frame.shape[:2]
+        self.load_classifier_xml()
 
         # initialize publisher
         self.ros_pub_servo_array = rospy.Publisher("/cmd_servo_array", ServoMotorArray, queue_size=1)
         self.bridge = CvBridge()
-        self.ros_pub_image = rospy.Publisher("camera/image", Image, queue_size=1)
-        rospy.loginfo("[FACE] initalized publisher")
+        self.ros_pub_image = rospy.Publisher("face_ctrl/image", Image, queue_size=1)
+        rospy.loginfo("[FACE CTRL] initalized publisher")
 
         # initialize subscriber
+        # for the servo motors
         self.servo_ids = []
         self.servo_angles = []
         self.servo_array_msg = ServoMotorArray()
@@ -71,7 +68,10 @@ class FaceController:
             self.servo_array_msg.servos.append(ServoMotor_msg())
 
         self.ros_sub_servo_array = rospy.Subscriber("/low_level_ctrl/servo_array", ServoMotorArray, self.store_servo_state)
-        rospy.loginfo("[FACE] initialized subscriber")
+
+        # the image from raspberry pi
+        self.ros_sub_acquired_image = rospy.Subscriber("/image_acquisition/image", Image, self.detect_face)
+        rospy.loginfo("[FACE CTRL] initialized subscriber")
 
         # initialize the controllers
         param_pid_yaw = self.ros_param_data["yaw_controller_gains"]
@@ -79,7 +79,10 @@ class FaceController:
         param_pid_pitch = self.ros_param_data["pitch_controller_gains"]
         self.pid_controller_pitch = PIDController(param_pid_pitch["kp"], param_pid_pitch["ki"], param_pid_pitch["kd"])
 
-        rospy.loginfo("[FACE] node initialization finished")
+        self.reconfigure_service = Server(configure_pidConfig, self.reconfigure_callback)
+        rospy.loginfo("[FACE CTRL] initialized dynamic reconfigure")
+
+        rospy.loginfo("[FACE CTRL] node initialization finished")
 
     @staticmethod
     def read_ros_parameters():
@@ -98,17 +101,22 @@ class FaceController:
 
         return ros_param_data
 
-    def check_camera(self):
+    def load_classifier_xml(self):
         """
         This function checks if the camera works properly.
         """
-        # -- 2. Read the video stream
-        if not self.cap.isOpened:
-            rospy.logerr("[FACE] Error opening video capture")
         if not self.face_cascade.load(self.face_cascade_name):
-            rospy.logerr("[FACE] Error loading face cascade")
+            rospy.logerr("[FACE CTRL] Error loading face cascade")
         if not self.eyes_cascade.load(self.eyes_cascade_name):
-            rospy.logerr("[FACE] Error loading eye cascade")
+            rospy.logerr("[FACE CTRL] Error loading eye cascade")
+
+    def reconfigure_callback(self, config, level):
+        rospy.loginfo("""Reconfiugre Request: {kp_x}, {kd_x},{kp_y}, {kd_y}""".format(**config))
+        self.pid_controller_yaw.kp = config["kp_x"]
+        self.pid_controller_yaw.kd = config["kd_x"]
+        self.pid_controller_pitch.kp = config["kp_y"]
+        self.pid_controller_pitch.kd = config["kd_y"]
+        return config
 
     def store_servo_state(self, message):
         """
@@ -142,7 +150,7 @@ class FaceController:
 
             self.ros_pub_servo_array.publish(self.servo_array_msg)
 
-    def detect_and_display(self, frame):
+    def detect_and_display(self, frame_gray):
         """
         This function runs adaboost to detect the face.
         :param frame: the frame from the camera
@@ -150,11 +158,14 @@ class FaceController:
         :return: the pixel deviation in x and y direction of the recognized face
         :rtype: float, float
         """
-        frame_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        frame_gray = cv.equalizeHist(frame_gray)
+        #frame_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        #frame_gray = cv.equalizeHist(frame_gray)
         # -- Detect faces
+        image_height, image_width = frame_gray.shape[:2]
+        center = (image_width / 2.0, image_height / 2.0)
+
         faces = self.face_cascade.detectMultiScale(frame_gray)
-        center = (self.image_width / 2.0, self.image_height / 2.0)
+
         for (x, y, w, h) in faces:
             center = (x + w // 2, y + h // 2)
             frame_gray = cv.ellipse(frame_gray, center, (w // 2, h // 2), 0, 0, 360, (255, 0, 255), 4)
@@ -166,10 +177,11 @@ class FaceController:
             #     radius = int(round((w2 + h2) * 0.25))
             #     frame = cv.circle(frame, eye_center, radius, (255, 0, 0), 4)
             break
+
         ros_image = self.bridge.cv2_to_imgmsg(frame_gray, "8UC1")
         self.ros_pub_image.publish(ros_image)
-        error_x = center[0] - self.image_width / 2.0
-        error_y = center[1] - self.image_height / 2.0
+        error_x = center[0] - image_width / 2.0
+        error_y = center[1] - image_height / 2.0
 
         return error_x, error_y
 
@@ -182,16 +194,14 @@ class FaceController:
         :param error_y: error in y direction
         :type error_y: float
         """
-        print(error_x)
-        print(error_y)
-        if abs(error_x) <= 10:
+        if abs(error_x) <= 5:
             self.pid_controller_yaw.delta_error = 0.0
             self.pid_controller_yaw.error_sum = 0.0
             error_x = 0
         else:
             self.pid_controller_yaw.delta_error = error_x - self.pid_controller_yaw.error_last
             self.pid_controller_yaw.error_sum += error_x
-        if abs(error_y) <= 20:
+        if abs(error_y) <= 5:
             self.pid_controller_pitch.delta_error = 0.0
             self.pid_controller_pitch.error_sum = 0.0
             error_y = 0
@@ -204,34 +214,30 @@ class FaceController:
         input_delta_angle_pitch = -1 * self.pid_controller_pitch.kp * error_x + self.pid_controller_pitch.kd * self.pid_controller_pitch.delta_error
 
         servo_delta_angle = [input_delta_angle_yaw, input_delta_angle_pitch]
-        print(servo_delta_angle)
 
         self.publish_servo_message(servo_delta_angle)
         self.pid_controller_yaw.error_last = error_x
         self.pid_controller_pitch.error_last = error_y
 
-    def detect_face(self):
+    def detect_face(self, image):
         """
         This function detects the face
         :return:
         """
-        ret, frame = self.cap.read()
-        if ret:
-            error_x, error_y = self.detect_and_display(frame)
-            self.servo_controller(error_x, error_y)
+        frame = self.bridge.imgmsg_to_cv2(image, "8UC1")
+        error_x, error_y = self.detect_and_display(frame)
+        self.servo_controller(error_x, error_y)
 
-    def run(self):
+    @staticmethod
+    def run():
         """
         This function is used to run the node
         """
         rate = rospy.Rate(50)
-
         while not rospy.is_shutdown():
-            self.detect_face()
             rate.sleep()
         # clean up while shutdown
-        self.cap.release()
-        rospy.loginfo("[FACE] all done!")
+        rospy.loginfo("[FACE CTRL] all done!")
 
 
 if __name__ == '__main__':

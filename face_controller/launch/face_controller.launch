@@ -5,5 +5,7 @@
 	<node pkg="face_controller" name="face_controller" type="face_ctrl.py" output="screen" >
 	</node>
 
+	<node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" output="screen" />
+
 
 </launch>

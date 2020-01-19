@@ -23,6 +23,7 @@ class AcquireImage:
         rospy.loginfo("[ACQUIRE IMAGE] initializing image acquisition node")
 
         self.ros_param_data = self.read_ros_parameters()
+        self.frequency = self.ros_param_data["frequency"]
 
         # initializing camera
         self.camera_device = self.ros_param_data["camera_device_port"]
@@ -48,6 +49,7 @@ class AcquireImage:
         :rtype: dict
         """
         ros_param_data = dict()
+        ros_param_data["frequency"] = rospy.get_param("/image_acquisition/frequency")
         ros_param_data["image_height"] = rospy.get_param("/image_acquisition/image_height")
         ros_param_data["image_width"] = rospy.get_param("/image_acquisition/image_width")
         ros_param_data["camera_device_port"] = rospy.get_param("/image_acquisition/camera_device_port")
@@ -63,7 +65,7 @@ class AcquireImage:
         :type frame: numpy array
         """
         frame_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        frame_gray = cv.equalizeHist(frame_gray)
+        #frame_gray = cv.equalizeHist(frame_gray)
         frame_gray = self.resize_image(frame_gray)
         ros_image = self.bridge.cv2_to_imgmsg(frame_gray, "8UC1")
         self.ros_pub_image.publish(ros_image)
@@ -94,7 +96,7 @@ class AcquireImage:
         """
         This function is used to run the node
         """
-        rate = rospy.Rate(50)
+        rate = rospy.Rate(self.frequency)
 
         while not rospy.is_shutdown():
             self.acquire_image()
