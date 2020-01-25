@@ -7,4 +7,4 @@ image_acquisition:
   camera_device_port: 0
   image_height: 280
   image_width: 360
-  frequency: 30
+  frequency: 10

@@ -6,6 +6,6 @@
 <node pkg="input_controller" name="input_controller" type="xbox_controller.py" output="screen" >
 </node>
 
-<node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" output="screen" />
+<node name="rqt_image_view" pkg="rqt_image_view" type="rqt_image_view" output="screen" />
 
 </launch>
