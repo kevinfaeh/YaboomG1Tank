@@ -1,6 +1,0 @@
-<launch>
-
-<node pkg="ultrasonic" name="ultrasonic" type="UltrasonicNode.py" output="screen" >
-</node>
-
-</launch>

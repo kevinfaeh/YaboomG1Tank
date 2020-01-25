@@ -23,12 +23,15 @@ message.max_range = 2
 message.header.frame_id = "/sonar_ranger"
 # main
 try:
-    while True:
+    while not rospy.is_shutdown():
         result = ultrasonic_sensor.measure()
         message.range = result
         message.field_of_view = 0
         data_publisher.publish(message)
         rate.sleep()
+    GPIO.cleanup()
+    rospy.loginfo("[Ultrasonic] all done!")
+
 
 except rospy.ROSInterruptException:
     GPIO.cleanup()
